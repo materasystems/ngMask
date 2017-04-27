@@ -155,12 +155,14 @@
 
                 controller.$parsers.push(parseViewValue);
 
-                $element.on('click input paste keyup', function() {
+                $element.on('click input paste keyup', function($event) {
                   timeout = $timeout(function() {
                     // Manual debounce to prevent multiple execution
                     $timeout.cancel(timeout);
 
                     parseViewValue($element.val());
+					$event.target.selectionStart = $event.target.value.length;
+                    $event.target.selectionEnd = $event.target.value.length;
                     $scope.$apply();
                   }, 100);
                 });

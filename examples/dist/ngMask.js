@@ -138,8 +138,10 @@
 
                     // Update view and model values
                     if(value !== viewValueWithDivisors){
-                      controller.$setViewValue(angular.copy(viewValueWithDivisors), 'input');
+                      controller.$viewValue = angular.copy(viewValueWithDivisors);
                       controller.$render();
+                      // Not using $setViewValue so we don't clobber the model value and dirty the form
+                      // without any kind of user interaction.
                     }
                   } catch (e) {
                     $log.error('[mask - parseViewValue]');
@@ -156,22 +158,22 @@
 
                 controller.$parsers.push(parseViewValue);
 
-                $element.on('click input paste keyup', function() {
+                $element.on('click input paste keyup', function($event) {
                   timeout = $timeout(function() {
                     // Manual debounce to prevent multiple execution
                     $timeout.cancel(timeout);
 
                     parseViewValue($element.val());
+					$event.target.selectionStart = $event.target.value.length;
+                    $event.target.selectionEnd = $event.target.value.length;
                     $scope.$apply();
                   }, 100);
                 });
 
                 // Register the watch to observe remote loading or promised data
-                // Deregister calling returned function
-                var watcher = $scope.$watch($attrs.ngModel, function (newValue, oldValue) {
+                $scope.$watch($attrs.ngModel, function (newValue, oldValue) {
                   if (angular.isDefined(newValue)) {
                     parseViewValue(newValue);
-                    watcher();
                   }
                 });
 
@@ -180,8 +182,10 @@
                 // but before the browser renders
                 if(options.value) {
                   $scope.$evalAsync(function($scope) {
-                    controller.$setViewValue(angular.copy(options.value), 'input');
+                    controller.$viewValue = angular.copy(options.value);
                     controller.$render();
+                    // Not using $setViewValue so we don't clobber the model value and dirty the form
+                    // without any kind of user interaction.
                   });
                 }
               });
